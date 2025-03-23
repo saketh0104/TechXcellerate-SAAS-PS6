@@ -1,17 +1,16 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-  "build": "react-scripts build"
-},
-
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required for backend'"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Backend for SaaS Subscription Manager",
   "dependencies": {
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
@@ -22,5 +21,8 @@
     "mongoose": "^8.9.5",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.16"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
   }
 }
