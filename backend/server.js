@@ -15,10 +15,10 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://saas-subscription-manager-1.onrender.com",
   "https://saas-subscription-manager.onrender.com",
-  "https://tech-xcellerate-saas-ps-6.vercel.app" // ✅ Corrected Vercel frontend URL
+  "https://tech-xcellerate-saas-ps-6-962nmog4e.vercel.app"
 ];
 
-// ✅ Dynamic CORS Handling
+// ✅ Fix CORS Policy
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -27,12 +27,29 @@ const corsOptions = {
       callback(new Error("❌ Not allowed by CORS"));
     }
   },
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true, // Allow sending cookies & auth headers
 };
 
-app.use(cors(corsOptions));
+app.use(cors(corsOptions)); // Apply CORS Middleware
+
+// ✅ Middleware to set CORS headers on all responses
+app.use((req, res, next) => {
+  const origin = req.get("Origin");
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // Preflight response for CORS
+  }
+  next();
+});
+
 app.use(express.json()); // Parse JSON requests
 
 // ✅ MongoDB Connection
