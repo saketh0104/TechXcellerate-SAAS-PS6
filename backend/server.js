@@ -16,7 +16,7 @@ const allowedOrigins = [
   "https://saas-subscription-manager.onrender.com"
 ];
 
-// CORS Configuration
+// Allow specific frontend origin
 const corsOptions = {
   origin: "https://tech-xcellerate-saas-ps-6-962nmog4e.vercel.app",
   methods: "GET,POST,PUT,DELETE",
@@ -25,6 +25,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
 
 app.use(express.json());
 
@@ -54,7 +55,3 @@ app.use('/api/subscriptions', subscriptionRoutes);
 
 // Start Cron Jobs
 scheduleRenewalReminders();
-
-// Server Start
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
