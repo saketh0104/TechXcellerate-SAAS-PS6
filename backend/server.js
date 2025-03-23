@@ -6,12 +6,16 @@ const authRoutes = require('./routes/authRoutes'); // Example route file
 const bodyParser = require('body-parser');
 
 dotenv.config();
-
 const app = express();
+app.use(cors({ origin: "https://tech-xcellerate-saas-ps-6.vercel.app" }));
 
-// ✅ Enable CORS for your frontend
-const allowedOrigins = ['https://tech-xcellerate-saas-ps-6-962nmog4e.vercel.app'];
-app.use(cors({
+// If you want to allow multiple origins
+// app.use(cors({ origin: ["https://your-frontend.com", "https://another.com"] }));
+
+// If you want to allow all origins (not recommended for production)
+// app.use(cors());
+
+app.use(express.json());app.use(cors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
