@@ -1,45 +1,78 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const mongoose = require('mongoose');
-const authRoutes = require('./routes/authRoutes'); // Example route file
-const bodyParser = require('body-parser');
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const scheduleRenewalReminders = require("./cronJobs/renewalReminders");
+const authRoutes = require("./routes/auth");
 
-dotenv.config();
+dotenv.config(); // Load environment variables
+
 const app = express();
-app.use(cors({ origin: "https://tech-xcellerate-saas-ps-6.vercel.app" }));
 
-// If you want to allow multiple origins
-// app.use(cors({ origin: ["https://your-frontend.com", "https://another.com"] }));
+// ✅ Allowed Frontend Origins
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://saas-subscription-manager-1.onrender.com",
+  "https://saas-subscription-manager.onrender.com",
+  "https://tech-xcellerate-saas-ps-6.vercel.app" // ✅ Corrected Vercel frontend URL
+];
 
-// If you want to allow all origins (not recommended for production)
-// app.use(cors());
+// ✅ Dynamic CORS Handling
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.error(`❌ Blocked CORS request from: ${origin}`);
+      callback(new Error("❌ Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
 
-app.use(express.json());app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// ✅ Apply Middlewares
+app.use(cors(corsOptions));
+app.use(express.json()); // Parse JSON requests
 
-app.use(express.json());
-app.use(bodyParser.json());
+// ✅ Handle Preflight Requests (OPTIONS)
+app.options("*", cors(corsOptions));
 
-// ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+// ✅ MongoDB Connection
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI is not defined in .env file!");
+  process.exit(1);
+}
 
-// ✅ Example API route for login
-app.use('/api', authRoutes);
+mongoose
+  .connect(MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1); // Exit process if DB connection fails
+  });
 
-// ✅ Default route
-app.get('/', (req, res) => {
-    res.send('SaaS Subscription Manager API is running...');
+// ✅ API Health Check
+app.get("/api", (req, res) => {
+  res.status(200).json({ message: "✅ API is running successfully!" });
 });
 
-// ✅ Start the server
+// ✅ API Routes
+app.use("/api", authRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+
+// ✅ Start Cron Jobs (If needed)
+scheduleRenewalReminders();
+
+// ✅ Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error("❌ Server Error:", err.message);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// ✅ Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
